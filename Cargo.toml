@@ -1,0 +1,34 @@
+[package]
+name = "rust-bls-bn254"
+description = "A rust crate implementing the BLS signatures using BN254 from arkworks"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+readme = "README.md"
+keywords = ["cryptography", "BLS", "BN254", "ethereum", "signature"]
+categories = ["cryptography"]
+
+[dependencies]
+ark-ff = { version = "0.4.2", default-features = false }
+ark-bn254 = { version = "0.4.0", features = ["curve"], default-features = false }
+ark-std = { version = "0.4.0", default-features = false }
+ark-ec = { version = "0.4.2", default-features = false }
+sha2 = { version = "0.10.6", default-features = false }
+num-bigint = "0.4.5"
+
+[dev-dependencies]
+rand_core = {version = "0.6.4", features = ["getrandom"] }
+hex = { version = "0.4.3" }
+hex-literal = { version = "0.4.1" }
+json = { version = "0.12.4" }
+num-bigint = { version = "0.4.3" }
+
+[features]
+default = ["std"]
+std = [
+    "ark-ff/std",
+    "ark-bn254/std",
+    "ark-std/std",
+    "ark-ec/std",
+    "sha2/std",
+]

@@ -6,7 +6,7 @@ use ark_ec::{pairing::PairingOutput, AffineRepr, CurveGroup};
 use errors::BLSError;
 use num_bigint::BigUint;
 use ark_std::One;
-use ark_bn254::{Bn254, Fq, Fr, G1Affine, G1Projective, G2Affine};
+use ark_bn254::{Bn254, Fq, Fr, G1Affine, G1Projective, G2Affine, G2Projective};
 use ark_ec::pairing::Pairing;
 use ark_ff::{BigInteger256, Field, PrimeField};
 use sha2::{Digest, Sha256};
@@ -76,13 +76,83 @@ pub fn verify(public_key: G2Affine, message: &[u8], signature: G1Affine) -> bool
     c1 == c2
 }
 
+pub fn aggregate_signatures(signatures: &[G1Affine]) -> Result<G1Affine, BLSError> {
+    if signatures.is_empty() {
+        return Err(BLSError::SignatureListEmpty);
+    }
+
+    let signatures_in_projective: Vec<G1Projective> = signatures.iter()
+        .map(|sig| {
+            let proj = G1Projective::from(*sig);
+            if !sig.is_on_curve() || !sig.is_in_correct_subgroup_assuming_on_curve() {
+                return Err(BLSError::SignatureNotInSubgroup);
+            }
+            Ok(proj)
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+
+    let mut aggregated = signatures_in_projective[0];
+    for sig in &signatures[1..] {
+        aggregated += sig;
+    }
+    Ok(aggregated.into_affine())
+}
+
+pub fn aggregate_public_keys(public_keys: &[G2Affine]) -> Result<G2Affine, BLSError> {
+    if public_keys.is_empty() {
+        return Err(BLSError::PublicKeyListEmpty);
+    }
+
+    let public_keys_in_projective: Vec<G2Projective> = public_keys.iter()
+        .map(|pk| {
+            let proj = G2Projective::from(*pk);
+            if !pk.is_on_curve() || !pk.is_in_correct_subgroup_assuming_on_curve() {
+                return Err(BLSError::PublicKeyNotInSubgroup);
+            }
+            Ok(proj)
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+
+    let mut aggregated = public_keys_in_projective[0];
+    for pk in &public_keys_in_projective[1..] {
+        aggregated += *pk;
+    }
+
+    Ok(aggregated.into_affine())
+}
 
 #[cfg(test)]
 mod test {
     use super::*;
     use ark_bn254::G2Projective;
-    use ark_std::ops::Mul;
+    use ark_std::{ops::Mul, test_rng};
     use ark_ff::UniformRand;
+
+    #[test]
+    fn test_aggregate_and_verify() {
+        let mut rng = test_rng();
+
+        // Generate private keys and corresponding public keys
+        let private_keys: Vec<Fr> = (0..500).map(|_| Fr::rand(&mut rng)).collect();
+        let public_keys: Vec<G2Affine> = private_keys.iter()
+            .map(|sk| (G2Affine::generator() * sk).into_affine())
+            .collect();
+
+        let message = b"Test message";
+
+        // Sign the message with each private key
+        let signatures: Vec<G1Affine> = private_keys.iter()
+            .map(|sk| sign(*sk, message).unwrap())
+            .collect();
+
+        // Aggregate the signatures and public keys
+        let aggregated_signature = aggregate_signatures(&signatures).unwrap();
+        let aggregated_public_key = aggregate_public_keys(&public_keys).unwrap();
+
+        // Verify the aggregated signature with the aggregated public key
+        let is_valid = verify(aggregated_public_key, message, aggregated_signature);
+        assert!(is_valid, "Aggregated signature verification failed");
+    }
 
     #[test]
     fn test_generic() {
@@ -98,5 +168,59 @@ mod test {
 
         let res = verify(pubkey, &message2.to_vec(), sig);
         print!("{}", res);
+    }
+
+    #[test]
+    fn test_aggregate_signatures() {
+        let mut rng = test_rng();
+
+        // Generate valid signatures
+        let signatures: Vec<G1Affine> = (0..5).map(|_| G1Affine::rand(&mut rng)).collect();
+
+        // Aggregate the signatures
+        let result = aggregate_signatures(&signatures);
+        assert!(result.is_ok());
+
+        // Test with an empty list
+        let empty_signatures: Vec<G1Affine> = vec![];
+        let result = aggregate_signatures(&empty_signatures);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err().to_string(), BLSError::SignatureListEmpty.to_string());
+
+        // Test with an invalid signature
+        let mut invalid_signature = G1Affine::rand(&mut rng);
+        invalid_signature.y = invalid_signature.y.double(); // This makes it invalid
+        let mut invalid_signatures = signatures.clone();
+        invalid_signatures.push(invalid_signature);
+        let result = aggregate_signatures(&invalid_signatures);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err().to_string(), BLSError::SignatureNotInSubgroup.to_string());
+    }
+
+    #[test]
+    fn test_aggregate_public_keys() {
+        let mut rng = test_rng();
+
+        // Generate valid public keys
+        let public_keys: Vec<G2Affine> = (0..5).map(|_| G2Affine::rand(&mut rng)).collect();
+
+        // Aggregate the public keys
+        let result = aggregate_public_keys(&public_keys);
+        assert!(result.is_ok());
+
+        // Test with an empty list
+        let empty_public_keys: Vec<G2Affine> = vec![];
+        let result = aggregate_public_keys(&empty_public_keys);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err().to_string(), BLSError::PublicKeyListEmpty.to_string());
+
+        // Test with an invalid public key
+        let mut invalid_public_key = G2Affine::rand(&mut rng);
+        invalid_public_key.y = invalid_public_key.y.double(); // This makes it invalid
+        let mut invalid_public_keys = public_keys.clone();
+        invalid_public_keys.push(invalid_public_key);
+        let result = aggregate_public_keys(&invalid_public_keys);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err().to_string(), BLSError::PublicKeyNotInSubgroup.to_string());
     }
 }

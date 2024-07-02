@@ -4,14 +4,12 @@ description = "A rust crate implementing the BLS signatures using BN254 from ark
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
-readme = "README.md"
 keywords = ["cryptography", "BLS", "BN254", "ethereum", "signature"]
 categories = ["cryptography"]
 authors = ["Anup Swamy Veena"]
 rust-version = "1.73"
 readme = "README.md"
 repository = "https://github.com/layr-labs/rust-bls-bn254"
-license-file = "LICENSE"
 exclude = [
     "tests/*",
     "benches/*",
@@ -41,3 +39,15 @@ std = [
     "ark-ec/std",
     "sha2/std",
 ]
+
+[profile.test]
+opt-level = 3
+debug = true
+strip = "none"
+debug-assertions = false
+overflow-checks = false
+lto = false
+panic = 'unwind'
+incremental = false
+codegen-units = 16
+rpath = false

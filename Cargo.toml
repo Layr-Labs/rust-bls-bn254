@@ -13,6 +13,7 @@ repository = "https://github.com/layr-labs/rust-bls-bn254"
 exclude = [
     "tests/*",
     "benches/*",
+    ".gitignore"
 ]
 
 [dependencies]

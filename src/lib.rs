@@ -13,7 +13,7 @@ use sha2::{Digest, Sha256};
 
 pub mod errors;
 
-fn pairing(u: G2Affine, v: G1Affine) -> PairingOutput<Bn254> {
+pub fn pairing(u: G2Affine, v: G1Affine) -> PairingOutput<Bn254> {
     Bn254::pairing(v, u)
 }
 

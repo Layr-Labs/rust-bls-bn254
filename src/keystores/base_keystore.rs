@@ -10,7 +10,7 @@ use sha2::{Digest, Sha256};
 use unicode_normalization::UnicodeNormalization;
 use uuid::Uuid;
 use std::io::Write;
-use crate::{consts::UNICODE_CONTROL_CHARS, errors::KeystoreError, sk_to_pk, utils::{pbkdf2, scrypt_key}};
+use crate::{errors::KeystoreError};//, sk_to_pk, utils::{pbkdf2, scrypt_key}};
 
 
 #[derive(Serialize, Deserialize, Debug, Default, PartialEq)]
@@ -134,8 +134,8 @@ impl Keystore {
         let filtered: String = normalized.chars().filter(|c| !UNICODE_CONTROL_CHARS.contains(c)).collect();
         filtered.as_bytes().to_vec()
     }
-    
-    pub fn encrypt(&mut self, secret: &[u8], password: &str, path: &str, 
+
+    pub fn encrypt(&mut self, secret: &[u8], password: &str, path: &str,
         _kdf_salt: Option<Vec<u8>>, _aes_iv: Option<Vec<u8>>) -> Result<(), KeystoreError> {
 
         let kdf_salt = match _kdf_salt {
@@ -153,7 +153,7 @@ impl Keystore {
         self.crypto.kdf.params.insert("salt".to_owned(), serde_json::Value::String(hex::encode(&kdf_salt)));
         self.crypto.cipher.params.insert("iv".to_string(), serde_json::Value::String(hex::encode(&aes_iv)));
 
-        let decryption_key: Vec<u8>; 
+        let decryption_key: Vec<u8>;
         if !self.crypto.kdf.params.contains_key("n") || !self.crypto.kdf.params.contains_key("r") || !self.crypto.kdf.params.contains_key("p") {
             if !self.crypto.kdf.params.contains_key("c") {
                 return Err(KeystoreError::GenericError("params didn't contain parameters for either scrypt or pbkdf2".into()))
@@ -169,7 +169,7 @@ impl Keystore {
             let dklen = Self::get_u32(self.crypto.kdf.params.get("dklen").cloned())? as usize;
             decryption_key = self.kdf(&Self::process_password(password), &kdf_salt, n, r, p, 0, dklen)?;
         }
-        
+
         let key = GenericArray::from_slice(&decryption_key[..16]);
         let nonce = GenericArray::from_slice(&aes_iv);
 
@@ -182,7 +182,7 @@ impl Keystore {
         let mut hasher = Sha256::new();
         hasher.update(&decryption_key[16..32]);
         hasher.update(&encrypted_secret);
-        
+
         self.crypto.checksum.message = hex::encode(hasher.finalize());
 
         self.pubkey = hex::encode(sk_to_pk(secret));
@@ -196,8 +196,8 @@ impl Keystore {
         let salt = hex::decode(self.crypto.kdf.params.get("salt").and_then(|v| v.as_str())
         .ok_or_else(|| KeystoreError::GenericError("salt not found".into()))?)?;
 
-        let decryption_key: Vec<u8>; 
-        if !self.crypto.kdf.params.contains_key("n") || !self.crypto.kdf.params.contains_key("r") || 
+        let decryption_key: Vec<u8>;
+        if !self.crypto.kdf.params.contains_key("n") || !self.crypto.kdf.params.contains_key("r") ||
         !self.crypto.kdf.params.contains_key("p") {
             if !self.crypto.kdf.params.contains_key("c") {
                 return Err(KeystoreError::DecryptionError("params didn't contain parameters for either scrypt or pbkdf2".into()))
@@ -233,5 +233,5 @@ impl Keystore {
         cipher.apply_keystream(&mut decrypted_message);
         Ok(decrypted_message.to_vec())
     }
-    
+
 }

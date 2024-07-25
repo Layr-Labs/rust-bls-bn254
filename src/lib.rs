@@ -12,6 +12,7 @@ use ark_ff::{BigInteger256, Field, PrimeField};
 use sha2::{Digest, Sha256};
 
 pub mod errors;
+pub mod keystores;
 
 fn pairing(u: G2Affine, v: G1Affine) -> PairingOutput<Bn254> {
     Bn254::pairing(v, u)
@@ -20,7 +21,7 @@ fn pairing(u: G2Affine, v: G1Affine) -> PairingOutput<Bn254> {
 fn hash_to_curve(digest: &[u8]) -> G1Affine {
     let one = Fq::one();
     let three = Fq::from(3u64);
-    
+
     let mut hasher = Sha256::new();
     hasher.update(digest);
     let hashed_result = hasher.finalize();
@@ -65,7 +66,7 @@ pub fn sign(sk: Fr, message: &[u8]) -> Result<G1Affine, BLSError> {
 
 pub fn verify(public_key: G2Affine, message: &[u8], signature: G1Affine) -> bool {
 
-    if !signature.is_in_correct_subgroup_assuming_on_curve() || 
+    if !signature.is_in_correct_subgroup_assuming_on_curve() ||
     !signature.is_on_curve() {
         return false;
     }
@@ -156,7 +157,7 @@ mod test {
 
     #[test]
     fn test_generic() {
-        
+
         let mut rng = ark_std::test_rng();
         let sk = Fr::rand(&mut rng);
         let pubkey = G2Projective::from(G2Affine::generator()).mul(sk).into_affine();

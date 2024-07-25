@@ -17,12 +17,21 @@ exclude = [
 ]
 
 [dependencies]
+aes = "0.8.0"
 ark-ff = { version = "0.4.2", default-features = false }
 ark-bn254 = { version = "0.4.0", features = ["curve"], default-features = false }
 ark-std = { version = "0.4.0", default-features = false }
 ark-ec = { version = "0.4.2", default-features = false }
+ctr = "0.9.0"
+hex = "0.4.3"
+rand = "0.8.4"
+serde = {version = "1.0.197" , features = ["derive"]}
+serde_json = "1.0.120"
 sha2 = { version = "0.10.6", default-features = false }
 num-bigint = "0.4.5"
+num-traits = "0.2.19"
+uuid = { version = "1.10", features = ["v4"] }
+unicode-normalization = "0.1.23"
 
 [dev-dependencies]
 rand_core = {version = "0.6.4", features = ["getrandom"] }

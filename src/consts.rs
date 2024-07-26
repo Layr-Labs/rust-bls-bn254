@@ -1,6 +1,16 @@
 pub const BITS: usize = 254;
-pub const BN254_CURVE_ORDER: &str = "52435875175126190479447740508185965837690552500527637822603658699938581184513"; // change to actual
-pub const SUPPORTED_LANGUAGES: [&str; 8] = ["english", "chinese_simplified", "italian", "korean", "portuguese", "spanish", "czech", "chinese_traditional"];
+pub const BN254_CURVE_ORDER: &str =
+    "52435875175126190479447740508185965837690552500527637822603658699938581184513"; // change to actual
+pub const SUPPORTED_LANGUAGES: [&str; 8] = [
+    "english",
+    "chinese_simplified",
+    "italian",
+    "korean",
+    "portuguese",
+    "spanish",
+    "czech",
+    "chinese_traditional",
+];
 pub const BLS_SIG_KEYGEN_SALT: &[u8] = b"BLS-SIG-KEYGEN-SALT-";
 pub const UNICODE_CONTROL_CHARS: &[char] = &[
     '\u{0000}', '\u{0001}', '\u{0002}', '\u{0003}', '\u{0004}', '\u{0005}', '\u{0006}', '\u{0007}',
@@ -11,5 +21,5 @@ pub const UNICODE_CONTROL_CHARS: &[char] = &[
     '\u{0087}', '\u{0088}', '\u{0089}', '\u{008A}', '\u{008B}', '\u{008C}', '\u{008D}', '\u{008E}',
     '\u{008F}', '\u{0090}', '\u{0091}', '\u{0092}', '\u{0093}', '\u{0094}', '\u{0095}', '\u{0096}',
     '\u{0097}', '\u{0098}', '\u{0099}', '\u{009A}', '\u{009B}', '\u{009C}', '\u{009D}', '\u{009E}',
-    '\u{009F}'
+    '\u{009F}',
 ];

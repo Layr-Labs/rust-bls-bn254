@@ -1,5 +1,5 @@
-pub mod path;
 mod mnemonic;
+pub mod path;
 pub mod tree;
 
 #[derive(Debug, Default, PartialEq)]

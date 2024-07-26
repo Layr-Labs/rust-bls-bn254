@@ -1,5 +1,3 @@
-
-
 #[cfg(test)]
 mod tests {
     use rust_bls_bn254::mnemonics::path::path_to_nodes;
@@ -20,5 +18,4 @@ mod tests {
             }
         }
     }
-
 }

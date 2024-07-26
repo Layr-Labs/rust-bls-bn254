@@ -1,9 +1,8 @@
-use std::collections::HashMap;
-use serde::{Deserialize, Serialize};
 use crate::errors::KeystoreError;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 use super::base_keystore::{Keystore, KeystoreCrypto, KeystoreModule};
-
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ScryptKeystore(Keystore);
@@ -44,8 +43,14 @@ impl ScryptKeystore {
         ScryptKeystore(keystore)
     }
 
-    pub fn encrypt(&mut self, secret: &[u8], password: &str, path: &str, 
-        kdf_salt: Option<Vec<u8>>, aes_iv: Option<Vec<u8>>) -> Result<(), KeystoreError> {
+    pub fn encrypt(
+        &mut self,
+        secret: &[u8],
+        password: &str,
+        path: &str,
+        kdf_salt: Option<Vec<u8>>,
+        aes_iv: Option<Vec<u8>>,
+    ) -> Result<(), KeystoreError> {
         self.0.encrypt(secret, password, path, kdf_salt, aes_iv)
     }
 
@@ -56,5 +61,4 @@ impl ScryptKeystore {
     pub fn to_keystore(self) -> Keystore {
         self.0
     }
-
 }

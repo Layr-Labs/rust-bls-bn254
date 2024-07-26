@@ -1,8 +1,7 @@
-use num_bigint::BigUint;
-use crate::errors::KeystoreError;
 use super::tree::{derive_child_sk, derive_master_sk};
 use super::Mnemonic;
-
+use crate::errors::KeystoreError;
+use num_bigint::BigUint;
 
 pub fn path_to_nodes(path: &str) -> Result<Vec<u32>, KeystoreError> {
     let path = path.replace(' ', "");
@@ -12,14 +11,21 @@ pub fn path_to_nodes(path: &str) -> Result<Vec<u32>, KeystoreError> {
 
     let mut indices: Vec<&str> = path.split('/').collect();
     if indices[0] != "m" {
-        return Err(KeystoreError::PathToNodes(format!("The first character of path should be `m`. Got {}.", indices[0])));
+        return Err(KeystoreError::PathToNodes(format!(
+            "The first character of path should be `m`. Got {}.",
+            indices[0]
+        )));
     }
     indices.remove(0);
     let result: Result<Vec<u32>, _> = indices.iter().map(|&index| index.parse::<u32>()).collect();
     result.map_err(|_| KeystoreError::PathToNodes("Failed to parse indices".into()))
 }
 
-pub fn mnemonic_and_path_to_key(mnemonic: &str, path: &str, password: &str) -> Result<BigUint, KeystoreError> {
+pub fn mnemonic_and_path_to_key(
+    mnemonic: &str,
+    path: &str,
+    password: &str,
+) -> Result<BigUint, KeystoreError> {
     let seed = Mnemonic::get_seed(mnemonic, password);
     let mut sk = derive_master_sk(&seed)?;
     let nodes = path_to_nodes(path)?;
@@ -28,4 +34,3 @@ pub fn mnemonic_and_path_to_key(mnemonic: &str, path: &str, password: &str) -> R
     }
     Ok(sk)
 }
-

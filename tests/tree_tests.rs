@@ -1,13 +1,18 @@
-
 #[cfg(test)]
 mod tests {
+    use assert_matches::assert_matches;
     use num_bigint::BigUint;
     use num_traits::Zero;
-    use rust_bls_bn254::{key_gen, mnemonics::tree::{derive_child_sk, derive_master_sk, hkdf_mod_r, ikm_to_lamport_sk, parent_sk_to_lamport_pk}, utils::flip_bits_256};
+    use rust_bls_bn254::{
+        key_gen,
+        mnemonics::tree::{
+            derive_child_sk, derive_master_sk, hkdf_mod_r, ikm_to_lamport_sk,
+            parent_sk_to_lamport_pk,
+        },
+        utils::flip_bits_256,
+    };
     use serde::{Deserialize, Deserializer, Serialize};
     use std::{fs, sync::Once};
-    use assert_matches::assert_matches;
-
 
     #[derive(Debug, Serialize, Deserialize)]
     struct KdfTest {
@@ -45,23 +50,27 @@ mod tests {
         D: Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
-        BigUint::parse_bytes(s.as_bytes(), 10).ok_or_else(|| serde::de::Error::custom("Failed to parse BigUint"))
+        BigUint::parse_bytes(s.as_bytes(), 10)
+            .ok_or_else(|| serde::de::Error::custom("Failed to parse BigUint"))
     }
 
     static INIT: Once = Once::new();
     static mut TEST_VECTORS: Option<Vec<TestVector>> = None;
     static mut TEST_VECTORS_TREE_KDF: Option<KdfTests> = None;
 
-
     fn setup() {
         unsafe {
             INIT.call_once(|| {
                 let file1 = fs::File::open("tests/test-vectors/tree_kdf_intermediate.json")
                     .expect("Unable to open tree_kdf_intermediate vectors file");
-                TEST_VECTORS = Some(serde_json::from_reader(file1).expect("Unable to parse tree_kdf_intermediate vectors"));
+                TEST_VECTORS = Some(
+                    serde_json::from_reader(file1)
+                        .expect("Unable to parse tree_kdf_intermediate vectors"),
+                );
                 let file2 = fs::File::open("tests/test-vectors/tree_kdf.json")
                     .expect("Unable to open tree_kdf vectors file");
-                TEST_VECTORS_TREE_KDF = Some(serde_json::from_reader(file2).expect("Unable to parse tree_kdf vectors"));
+                TEST_VECTORS_TREE_KDF =
+                    Some(serde_json::from_reader(file2).expect("Unable to parse tree_kdf vectors"));
             });
         }
     }
@@ -75,14 +84,17 @@ mod tests {
         setup();
         unsafe { TEST_VECTORS_TREE_KDF.as_ref().unwrap() }
     }
-    
+
     #[test]
     fn test_hkdf_mod_r() {
         for test_vector in get_test_vectors_for_tree_kdf().kdf_tests.iter() {
-            assert_eq!(key_gen(&test_vector.seed.as_bytes(), &[]), hkdf_mod_r(&test_vector.seed.as_bytes(),  &[]).unwrap());
+            assert_eq!(
+                key_gen(&test_vector.seed.as_bytes(), &[]),
+                hkdf_mod_r(&test_vector.seed.as_bytes(), &[]).unwrap()
+            );
         }
     }
-    
+
     #[test]
     fn test_hkdf_mod_r_key_info() {
         let seed = vec![0u8; 32];
@@ -103,10 +115,14 @@ mod tests {
     fn test_ikm_to_lamport_sk() {
         let test_vectors = get_test_vectors();
         for test_vector in test_vectors {
-            let test_vector_lamport_0: Vec<Vec<u8>> = test_vector.lamport_0.iter()
+            let test_vector_lamport_0: Vec<Vec<u8>> = test_vector
+                .lamport_0
+                .iter()
                 .map(|x| hex::decode(x).unwrap())
                 .collect();
-            let test_vector_lamport_1: Vec<Vec<u8>> = test_vector.lamport_1.iter()
+            let test_vector_lamport_1: Vec<Vec<u8>> = test_vector
+                .lamport_1
+                .iter()
                 .map(|x| hex::decode(x).unwrap())
                 .collect();
             let salt = test_vector.child_index.to_be_bytes();
@@ -126,18 +142,22 @@ mod tests {
             let parent_sk = &test_vector.master_SK;
             let index = test_vector.child_index;
             let lamport_pk = hex::decode(&test_vector.compressed_lamport_PK).unwrap();
-            assert_eq!(lamport_pk, parent_sk_to_lamport_pk(&parent_sk, index.try_into().unwrap()));
+            assert_eq!(
+                lamport_pk,
+                parent_sk_to_lamport_pk(&parent_sk, index.try_into().unwrap())
+            );
         }
     }
 
     #[test]
     fn test_flip_bits_256() {
         let test_vector = get_test_vectors();
-        let test_vector_int = BigUint::parse_bytes(&test_vector[0].seed[..64].as_bytes(), 16).unwrap();
+        let test_vector_int =
+            BigUint::parse_bytes(&test_vector[0].seed[..64].as_bytes(), 16).unwrap();
         let flipped = flip_bits_256(&test_vector_int);
         assert_eq!(test_vector_int & &flipped, BigUint::zero());
     }
-    
+
     #[test]
     fn test_derive_master_sk_valid() {
         let test_vectors = &get_test_vectors_for_tree_kdf().kdf_tests;
@@ -161,11 +181,17 @@ mod tests {
             let child_sk = &test.child_SK;
             if u64::from(test.child_index) < 2u64.pow(32) {
                 let index = test.child_index;
-                assert_eq!(derive_child_sk(parent_sk.clone(), index.try_into().unwrap()).unwrap(), *child_sk);
+                assert_eq!(
+                    derive_child_sk(parent_sk.clone(), index.try_into().unwrap()).unwrap(),
+                    *child_sk
+                );
             } else {
                 let index = 2u64.pow(32);
                 assert_matches!(
-                    std::panic::catch_unwind(|| derive_child_sk(parent_sk.clone(), index.try_into().unwrap())),
+                    std::panic::catch_unwind(|| derive_child_sk(
+                        parent_sk.clone(),
+                        index.try_into().unwrap()
+                    )),
                     Err(_)
                 );
             }

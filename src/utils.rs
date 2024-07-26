@@ -1,8 +1,8 @@
 use num_bigint::BigUint;
-use num_traits::{ToPrimitive, One};
+use num_traits::{One, ToPrimitive};
 use pbkdf2::pbkdf2_hmac;
-use sha2::{Sha256, Sha512};
 use scrypt::{scrypt, Params};
+use sha2::{Sha256, Sha512};
 
 use crate::errors::KeystoreError;
 
@@ -11,13 +11,22 @@ pub fn flip_bits_256(input: &BigUint) -> BigUint {
     input ^ &max_value
 }
 
-pub fn scrypt_key(password: &[u8], salt: &[u8], n: u32, r: u32, p: u32, dklen: usize) -> Result<Vec<u8>, KeystoreError> {
+pub fn scrypt_key(
+    password: &[u8],
+    salt: &[u8],
+    n: u32,
+    r: u32,
+    p: u32,
+    dklen: usize,
+) -> Result<Vec<u8>, KeystoreError> {
     if n * r * p < 2u32.pow(20) {
-        return Err(KeystoreError::ScryptError("The Scrypt parameters chosen are not secure".to_string()));
+        return Err(KeystoreError::ScryptError(
+            "The Scrypt parameters chosen are not secure".to_string(),
+        ));
     }
-    
+
     validate_scrypt_params(n, r)?;
-    
+
     if n == 0 {
         return Err(KeystoreError::ScryptError("The given `n` is 0".to_string()));
     }
@@ -48,13 +57,24 @@ fn validate_scrypt_params(n: u32, r: u32) -> Result<(), KeystoreError> {
     Ok(())
 }
 
-pub fn pbkdf2(password: &[u8], salt: &[u8], dklen: usize, c: u32, prf: &str) -> Result<Vec<u8>, KeystoreError> {
+pub fn pbkdf2(
+    password: &[u8],
+    salt: &[u8],
+    dklen: usize,
+    c: u32,
+    prf: &str,
+) -> Result<Vec<u8>, KeystoreError> {
     if !prf.contains("sha") {
-        return Err(KeystoreError::PBKDF2Error(format!("String 'sha' is not in `prf`({})", prf)));
+        return Err(KeystoreError::PBKDF2Error(format!(
+            "String 'sha' is not in `prf`({})",
+            prf
+        )));
     }
 
     if prf.contains("sha256") && c < 2_u32.pow(18) {
-        return Err(KeystoreError::PBKDF2Error("The PBKDF2 parameters chosen are not secure.".to_string()));
+        return Err(KeystoreError::PBKDF2Error(
+            "The PBKDF2 parameters chosen are not secure.".to_string(),
+        ));
     }
 
     let mut output = vec![0u8; dklen];
@@ -63,7 +83,10 @@ pub fn pbkdf2(password: &[u8], salt: &[u8], dklen: usize, c: u32, prf: &str) -> 
     } else if prf.contains("sha512") {
         pbkdf2_hmac::<Sha512>(password, salt, c, &mut output);
     } else {
-        return Err(KeystoreError::PBKDF2Error(format!("Unsupported PRF: {}", prf)));
+        return Err(KeystoreError::PBKDF2Error(format!(
+            "Unsupported PRF: {}",
+            prf
+        )));
     }
 
     Ok(output)

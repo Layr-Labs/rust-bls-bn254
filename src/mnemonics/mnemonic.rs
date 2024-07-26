@@ -1,21 +1,25 @@
-use std::{collections::{HashMap, HashSet}, fs::File, io::{self, BufRead, BufReader}, path::Path};
 use num_bigint::BigUint;
-use std::ops::Shl;
 use num_traits::{ToPrimitive, Zero};
-use rand::Rng;
 use pbkdf2::pbkdf2_hmac;
-use sha2::{Sha256, Sha512, Digest};
+use rand::Rng;
+use sha2::{Digest, Sha256, Sha512};
+use std::ops::Shl;
+use std::{
+    collections::{HashMap, HashSet},
+    fs::File,
+    io::{self, BufRead, BufReader},
+    path::Path,
+};
 use unicode_normalization::UnicodeNormalization;
 
+use super::Mnemonic;
 use crate::{consts::SUPPORTED_LANGUAGES, errors::KeystoreError};
-use super::Mnemonic;    
 
 impl Mnemonic {
-    
     pub fn get_seed(mnemonic: &str, password: &str) -> [u8; 64] {
         let encoded_mnemonic = mnemonic.nfkd().collect::<String>().into_bytes();
         let salt = format!("mnemonic{}", password.nfkd().collect::<String>()).into_bytes();
-        
+
         let mut seed = [0u8; 64];
         pbkdf2_hmac::<Sha512>(&encoded_mnemonic, &salt, 2048, &mut seed);
         seed
@@ -25,7 +29,10 @@ impl Mnemonic {
         let file_path = format!("{}/{}.txt", words_path, language);
         let file = File::open(file_path).expect("Unable to open word list file");
         let reader = BufReader::new(file);
-        reader.lines().map(|line| line.expect("Unable to read line")).collect()
+        reader
+            .lines()
+            .map(|line| line.expect("Unable to read line"))
+            .collect()
     }
 
     pub fn get_word_list(language: &str, words_path: &str) -> io::Result<Vec<String>> {
@@ -39,21 +46,26 @@ impl Mnemonic {
     fn abbreviate_word(word: &String) -> String {
         let normalized_word = word.nfkc().collect::<String>();
         if normalized_word.len() < 4 {
-            normalized_word.chars().take(normalized_word.len()).collect()
+            normalized_word
+                .chars()
+                .take(normalized_word.len())
+                .collect()
         } else {
             normalized_word.chars().take(4).collect()
         }
     }
 
     fn abbreviate_words(words: &[String]) -> Vec<String> {
-        words.iter()
-            .map(|word| {
-                Self::abbreviate_word(word)
-            })
+        words
+            .iter()
+            .map(|word| Self::abbreviate_word(word))
             .collect()
     }
 
-    fn determine_mnemonic_language(mnemonic: &str, words_path: &str) -> Result<Vec<String>, KeystoreError> {
+    fn determine_mnemonic_language(
+        mnemonic: &str,
+        words_path: &str,
+    ) -> Result<Vec<String>, KeystoreError> {
         let languages = SUPPORTED_LANGUAGES;
         let mut word_language_map: HashMap<String, String> = HashMap::new();
 
@@ -64,12 +76,16 @@ impl Mnemonic {
             }
         }
 
-        let mnemonic_list: Vec<String> = mnemonic.to_lowercase().split_whitespace().map(|word| word.to_string()).collect();
+        let mnemonic_list: Vec<String> = mnemonic
+            .to_lowercase()
+            .split_whitespace()
+            .map(|word| word.to_string())
+            .collect();
         let abbrev_mnemonic_list = Self::abbreviate_words(&mnemonic_list);
         let mut word_languages: HashSet<String> = HashSet::new();
         let mut found = 0;
 
-        for (word, to_lang) in word_language_map.iter(){
+        for (word, to_lang) in word_language_map.iter() {
             let abbrev_word_from_map = Self::abbreviate_word(word);
 
             for abbrev in &abbrev_mnemonic_list {
@@ -81,7 +97,9 @@ impl Mnemonic {
         }
 
         if found < mnemonic_list.len() {
-            return Err(KeystoreError::MnemonicError(format!("A Word was not found in any mnemonic word lists.")));
+            return Err(KeystoreError::MnemonicError(format!(
+                "A Word was not found in any mnemonic word lists."
+            )));
         }
 
         Ok(word_languages.into_iter().collect())
@@ -98,13 +116,17 @@ impl Mnemonic {
         }
     }
 
-    pub fn get_mnemonic(language: &str, words_path: &str, entropy: Option<&[u8]>) -> Result<String, KeystoreError> {
+    pub fn get_mnemonic(
+        language: &str,
+        words_path: &str,
+        entropy: Option<&[u8]>,
+    ) -> Result<String, KeystoreError> {
         let entropy = match entropy {
             Some(e) => e.to_vec(),
             None => {
                 let mut rng = rand::thread_rng();
                 (0..32).map(|_| rng.gen()).collect()
-            }
+            },
         };
 
         let entropy_length = entropy.len() * 8;
@@ -119,7 +141,8 @@ impl Mnemonic {
 
         for i in (0..(total_length) / 11).rev() {
             let index = (&entropy_bits >> (i * 11)) & BigUint::from(0x7FFu64);
-            let index_u32 = u32::from_str_radix(&index.to_str_radix(16), 16).map_err(|e| KeystoreError::MnemonicError(e.to_string()))?; 
+            let index_u32 = u32::from_str_radix(&index.to_str_radix(16), 16)
+                .map_err(|e| KeystoreError::MnemonicError(e.to_string()))?;
             mnemonic.push(word_list[index_u32 as usize].as_str());
         }
 
@@ -151,13 +174,19 @@ impl Mnemonic {
         for language in languages {
             let word_list = Self::load_word_list(&language, words_path);
             let abbrev_word_list = Self::abbreviate_words(&word_list);
-            let modified: Vec<String> = mnemonic.split_whitespace().map(|s| s.to_string()).collect();
+            let modified: Vec<String> =
+                mnemonic.split_whitespace().map(|s| s.to_string()).collect();
             let abbrev_mnemonic_list: Vec<String> = Self::abbreviate_words(&modified);
 
-            if abbrev_mnemonic_list.len() < 12 || abbrev_mnemonic_list.len() > 24 || abbrev_mnemonic_list.len() % 3 != 0 {
-                return Err(KeystoreError::ReconstructMnemonicError(format!("Invalid mnemonic length: {}", abbrev_mnemonic_list.len())));
+            if abbrev_mnemonic_list.len() < 12
+                || abbrev_mnemonic_list.len() > 24
+                || abbrev_mnemonic_list.len() % 3 != 0
+            {
+                return Err(KeystoreError::ReconstructMnemonicError(format!(
+                    "Invalid mnemonic length: {}",
+                    abbrev_mnemonic_list.len()
+                )));
             }
-
 
             let mut word_indices: Vec<usize> = Vec::new();
             let mut word_indices_error = false;
@@ -173,11 +202,16 @@ impl Mnemonic {
             if word_indices_error {
                 continue;
             }
-            
+
             let checksum_length = abbrev_mnemonic_list.len() / 3;
-            let refd: Vec<u16> = word_indices.iter().map(|e| 
-                e.to_u16().ok_or_else(|| 
-                    KeystoreError::ReconstructMnemonicError("unable to convert to u16".into()))).collect::<Result<Vec<u16>, _>>()?;
+            let refd: Vec<u16> = word_indices
+                .iter()
+                .map(|e| {
+                    e.to_u16().ok_or_else(|| {
+                        KeystoreError::ReconstructMnemonicError("unable to convert to u16".into())
+                    })
+                })
+                .collect::<Result<Vec<u16>, _>>()?;
             let mnemonic_int = Self::uint11_array_to_uint(&refd);
             let mask = BigUint::from(1u32).shl(checksum_length) - BigUint::from(1u32);
             let checksum = &mnemonic_int & &mask;
@@ -192,13 +226,25 @@ impl Mnemonic {
 
             if Self::get_checksum(&entropy_bytes) == checksum {
                 if let Some(_) = reconstructed_mnemonic {
-                    return Err(KeystoreError::ReconstructMnemonicError("Mnemonic is valid in multiple languages.".into()));
+                    return Err(KeystoreError::ReconstructMnemonicError(
+                        "Mnemonic is valid in multiple languages.".into(),
+                    ));
                 }
-                reconstructed_mnemonic = Some(word_indices.into_iter().map(|index| full_word_list[index].clone()).collect::<Vec<String>>().join(" "));
+                reconstructed_mnemonic = Some(
+                    word_indices
+                        .into_iter()
+                        .map(|index| full_word_list[index].clone())
+                        .collect::<Vec<String>>()
+                        .join(" "),
+                );
             }
         }
 
-        reconstructed_mnemonic.ok_or_else(|| KeystoreError::ReconstructMnemonicError(format!("Failed to reconstruct mnemonic. {}", mnemonic).into()))
+        reconstructed_mnemonic.ok_or_else(|| {
+            KeystoreError::ReconstructMnemonicError(
+                format!("Failed to reconstruct mnemonic. {}", mnemonic).into(),
+            )
+        })
     }
 
     pub fn index_to_word(word_list: &[String], index: usize) -> Result<String, String> {
@@ -207,6 +253,4 @@ impl Mnemonic {
         }
         Ok(word_list[index].clone())
     }
-
 }
-

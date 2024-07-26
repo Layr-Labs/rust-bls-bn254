@@ -1,8 +1,8 @@
 use std::{error::Error, fmt, io};
 
 use hex::FromHexError;
-use thiserror::Error as ErrorThis;
 use serde_json::Error as SerdeError;
+use thiserror::Error as ErrorThis;
 
 #[derive(Debug)]
 pub enum BLSError {
@@ -29,7 +29,7 @@ impl fmt::Display for BLSError {
 pub enum KeystoreError {
     #[error("Invalid KDF function provided.")]
     WrongKdfFunction,
-    
+
     #[error("Serde serialization/deserialization error: {0}")]
     SerdeError(#[from] SerdeError),
 
@@ -41,7 +41,7 @@ pub enum KeystoreError {
 
     #[error("Invalid KDF parameters.")]
     WrongKDFParameters,
-    
+
     #[error("Derive Child Sk Error error: {0}")]
     DeriveChildSkError(String),
 

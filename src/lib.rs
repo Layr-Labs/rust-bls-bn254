@@ -3,18 +3,73 @@
 extern crate alloc;
 
 use ark_ec::{pairing::PairingOutput, AffineRepr, CurveGroup};
+use ark_serialize::CanonicalSerialize;
+use consts::{BLS_SIG_KEYGEN_SALT, BN254_CURVE_ORDER};
 use errors::BLSError;
+use hkdf::Hkdf;
 use num_bigint::BigUint;
 use ark_std::One;
 use ark_bn254::{Bn254, Fq, Fr, G1Affine, G1Projective, G2Affine, G2Projective};
 use ark_ec::pairing::Pairing;
-use ark_ff::{BigInteger256, Field, PrimeField};
+use ark_ff::{BigInteger256, Field, PrimeField, Zero};
 use sha2::{Digest, Sha256};
 
+pub mod keystores;
+pub mod mnemonics;
+pub mod consts;
 pub mod errors;
+pub mod utils;
 
 fn pairing(u: G2Affine, v: G1Affine) -> PairingOutput<Bn254> {
     Bn254::pairing(v, u)
+}
+
+fn xmd_hash_function(input: &[u8]) -> Vec<u8> {
+    let mut hasher = Sha256::new();
+    hasher.update(input);
+    hasher.finalize().to_vec()
+}
+
+fn i2osp(x: usize, x_len: usize) -> Vec<u8> {
+    let mut result = vec![0u8; x_len];
+    let mut x = x;
+    for i in (0..x_len).rev() {
+        result[i] = (x & 0xff) as u8;
+        x >>= 8;
+    }
+    result
+}
+
+fn os2ip(bytes: &[u8]) -> BigUint {
+    BigUint::from_bytes_be(bytes)
+}
+
+pub fn key_gen(ikm: &[u8], key_info: &[u8]) -> BigUint {
+    let curve_order = BigUint::parse_bytes(BN254_CURVE_ORDER.as_bytes(), 10).unwrap();
+    let mut salt = BLS_SIG_KEYGEN_SALT.to_vec();
+    let mut sk = BigUint::zero();
+    
+    while sk.is_zero() {
+
+        salt = xmd_hash_function(&salt);
+        let mut temp_idk = ikm.to_vec();
+        temp_idk.extend_from_slice(&[0u8]);
+        let hkdf = Hkdf::<Sha256>::new(Some(&salt), &temp_idk);
+        let mut okm = vec![0u8; (1.5 * ((curve_order.bits() as f64) / 8.0)).ceil() as usize];
+        let mut temp_key_info = key_info.to_vec();
+        temp_key_info.extend_from_slice(&i2osp(okm.len(), 2));
+        hkdf.expand(&temp_key_info, &mut okm).unwrap();
+        sk = os2ip(&okm) % &curve_order;
+    }
+    sk
+}
+
+pub fn sk_to_pk(sk: &[u8]) -> Vec<u8> {
+    let _sk = Fr::from_be_bytes_mod_order(sk);
+    let mut compressed_bytes = Vec::new();
+    let pk = G2Projective::from(G2Affine::generator()) * _sk;
+    pk.serialize_uncompressed(&mut compressed_bytes).unwrap();
+    compressed_bytes
 }
 
 fn hash_to_curve(digest: &[u8]) -> G1Affine {

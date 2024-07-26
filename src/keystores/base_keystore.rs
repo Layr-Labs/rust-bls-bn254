@@ -1,5 +1,3 @@
-use std::{collections::HashMap, fs, os::unix::fs::PermissionsExt};
-
 use crate::{
     consts::UNICODE_CONTROL_CHARS,
     errors::KeystoreError,
@@ -17,6 +15,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use sha2::{Digest, Sha256};
 use std::io::Write;
+use std::{collections::HashMap, fs, os::unix::fs::PermissionsExt};
 use unicode_normalization::UnicodeNormalization;
 use uuid::Uuid;
 
@@ -49,6 +48,10 @@ impl KeystoreCrypto {
     }
 }
 
+/// Keystore is an EIP 2335-compliant keystore. A keystore is a JSON file that
+/// stores an encrypted version of a private key under a user-supplied password.
+///
+/// Ref: https://github.com/ethereum/EIPs/blob/master/EIPS/eip-2335.md
 #[derive(Serialize, Deserialize, Debug, Default, PartialEq)]
 pub struct Keystore {
     pub crypto: KeystoreCrypto,
@@ -104,8 +107,9 @@ impl Keystore {
         }
     }
 
-    fn save(&self, file_path: &str) -> std::io::Result<()> {
-        let json_data = serde_json::to_string(self).unwrap();
+    /// save to self as a JSON keystore.
+    fn save(&self, file_path: &str) -> Result<(), KeystoreError> {
+        let json_data = serde_json::to_string(self)?;
         let mut file = fs::File::create(file_path)?;
         file.write_all(json_data.as_bytes())?;
         if cfg!(unix) {
@@ -160,6 +164,8 @@ impl Keystore {
         Ok(Self::from_json(&json_dict)?)
     }
 
+    /// Encode password as NFKD UTF-8 as per:
+    /// https://github.com/ethereum/EIPs/blob/master/EIPS/eip-2335.md#password-requirements
     pub fn process_password(password: &str) -> Vec<u8> {
         let normalized: String = password.nfkd().collect();
         let filtered: String = normalized
@@ -169,6 +175,7 @@ impl Keystore {
         filtered.as_bytes().to_vec()
     }
 
+    /// Encrypt a secret (BLS SK) as an EIP 2335 Keystore.
     pub fn encrypt(
         &mut self,
         secret: &[u8],
@@ -257,6 +264,7 @@ impl Keystore {
         Ok(())
     }
 
+    /// Retrieve the secret (BLS SK) from the self keystore by decrypting it with `password`
     pub fn decrypt(&self, password: &str) -> Result<Vec<u8>, KeystoreError> {
         let salt = hex::decode(
             self.crypto

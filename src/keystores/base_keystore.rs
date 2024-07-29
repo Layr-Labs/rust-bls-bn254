@@ -86,10 +86,10 @@ impl Keystore {
         c: u32,
         dklen: usize,
     ) -> Result<Vec<u8>, KeystoreError> {
-        if self.crypto.kdf.function == "scrypt" {
-            Ok(scrypt_key(password, salt, n, r, p, dklen)?)
-        } else if self.crypto.kdf.function == "pbkdf2" {
-            let prf = self
+        match self.crypto.kdf.function.as_str() {
+            "scrypt" => Ok(scrypt_key(password, salt, n, r, p, dklen)?),
+            "pbkdf2" => {
+                let prf = self
                 .crypto
                 .kdf
                 .params
@@ -98,12 +98,13 @@ impl Keystore {
                 .ok_or_else(|| {
                     KeystoreError::GenericError("pubkey not found or not a string".into())
                 })?;
-            Ok(pbkdf2(password, salt, dklen, c, prf)?)
-        } else {
-            Err(KeystoreError::GenericError(format!(
-                "unsupported function {}",
-                self.crypto.kdf.function
-            )))
+                Ok(pbkdf2(password, salt, dklen, c, prf)?)
+            }
+
+            _ => Err(KeystoreError::GenericError(format!(
+                    "unsupported function {}",
+                    self.crypto.kdf.function
+                )))
         }
     }
 
@@ -123,7 +124,11 @@ impl Keystore {
     pub fn from_json(
         json_dict: &HashMap<String, serde_json::Value>,
     ) -> Result<Self, KeystoreError> {
-        let crypto = KeystoreCrypto::from_json(json_dict["crypto"].as_object().unwrap())?;
+        let crypto_dict_object = match json_dict["crypto"].as_object() {
+            None => return Err(KeystoreError::GenericError("crypto dict object not found".to_string())),
+            Some(obj) => obj
+        };
+        let crypto = KeystoreCrypto::from_json(crypto_dict_object)?;
         let path = json_dict
             .get("path")
             .and_then(|v| v.as_str())

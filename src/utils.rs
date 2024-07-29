@@ -2,7 +2,7 @@ use num_bigint::BigUint;
 use num_traits::{One, ToPrimitive};
 use pbkdf2::pbkdf2_hmac;
 use scrypt::{scrypt, Params};
-use sha2::{Sha256, Sha512};
+use sha2::{Digest, Sha256, Sha512};
 
 use crate::errors::KeystoreError;
 
@@ -11,6 +11,17 @@ pub fn flip_bits_256(input: &BigUint) -> BigUint {
     input ^ &max_value
 }
 
+/// The SHA256 helper function.
+pub fn sha256(input: &[u8]) -> [u8; 32] {
+    let mut hasher = Sha256::new();
+    hasher.update(input);
+    hasher
+        .finalize()
+        .try_into()
+        .expect("Hash should be 32 bytes")
+}
+
+/// The scrypt key derivation function.
 pub fn scrypt_key(
     password: &[u8],
     salt: &[u8],
@@ -57,6 +68,7 @@ fn validate_scrypt_params(n: u32, r: u32) -> Result<(), KeystoreError> {
     Ok(())
 }
 
+/// A variant of the pbkdf2 function which uses HMAC for PRF.
 pub fn pbkdf2(
     password: &[u8],
     salt: &[u8],
@@ -71,6 +83,10 @@ pub fn pbkdf2(
         )));
     }
 
+
+    // Verify the number of rounds of SHA256-PBKDF2. SHA512 not checked as use in BIP39
+    // does not require, and therefore doesn't use, safe parameters (c=2048).
+    // Ref: https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki#from-mnemonic-to-seed
     if prf.contains("sha256") && c < 2_u32.pow(18) {
         return Err(KeystoreError::PBKDF2Error(
             "The PBKDF2 parameters chosen are not secure.".to_string(),

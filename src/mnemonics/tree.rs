@@ -1,7 +1,7 @@
-use crate::{consts::BN254_CURVE_ORDER, errors::KeystoreError, utils::flip_bits_256};
+use crate::{consts::BN254_CURVE_ORDER, errors::KeystoreError, utils::{flip_bits_256, sha256}};
 use hkdf::Hkdf;
 use num_bigint::BigUint;
-use num_traits::{One, Zero};
+use num_traits::Zero;
 use sha2::{Digest, Sha256};
 
 /// Derives the lamport SK for a given `IKM` and `salt`.
@@ -19,15 +19,6 @@ pub fn ikm_to_lamport_sk(ikm: &[u8], salt: &[u8]) -> Vec<[u8; 32]> {
         lamport_sk.push(array);
     }
     lamport_sk
-}
-
-fn sha256(input: &[u8]) -> [u8; 32] {
-    let mut hasher = Sha256::new();
-    hasher.update(input);
-    hasher
-        .finalize()
-        .try_into()
-        .expect("Hash should be 32 bytes")
 }
 
 /// Derives the `index`th child's lamport PK from the `parent_SK`.

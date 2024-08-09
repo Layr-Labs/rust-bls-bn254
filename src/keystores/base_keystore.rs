@@ -14,8 +14,7 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use sha2::{Digest, Sha256};
-use std::io::Write;
-use std::{collections::HashMap, fs, os::unix::fs::PermissionsExt};
+use std::{collections::HashMap, fs, io::Write, os::unix::fs::PermissionsExt};
 use unicode_normalization::UnicodeNormalization;
 use uuid::Uuid;
 
@@ -90,21 +89,21 @@ impl Keystore {
             "scrypt" => Ok(scrypt_key(password, salt, n, r, p, dklen)?),
             "pbkdf2" => {
                 let prf = self
-                .crypto
-                .kdf
-                .params
-                .get("prf")
-                .and_then(|v| v.as_str())
-                .ok_or_else(|| {
-                    KeystoreError::GenericError("pubkey not found or not a string".into())
-                })?;
+                    .crypto
+                    .kdf
+                    .params
+                    .get("prf")
+                    .and_then(|v| v.as_str())
+                    .ok_or_else(|| {
+                        KeystoreError::GenericError("pubkey not found or not a string".into())
+                    })?;
                 Ok(pbkdf2(password, salt, dklen, c, prf)?)
-            }
+            },
 
             _ => Err(KeystoreError::GenericError(format!(
-                    "unsupported function {}",
-                    self.crypto.kdf.function
-                )))
+                "unsupported function {}",
+                self.crypto.kdf.function
+            ))),
         }
     }
 
@@ -125,8 +124,12 @@ impl Keystore {
         json_dict: &HashMap<String, serde_json::Value>,
     ) -> Result<Self, KeystoreError> {
         let crypto_dict_object = match json_dict["crypto"].as_object() {
-            None => return Err(KeystoreError::GenericError("crypto dict object not found".to_string())),
-            Some(obj) => obj
+            None => {
+                return Err(KeystoreError::GenericError(
+                    "crypto dict object not found".to_string(),
+                ))
+            },
+            Some(obj) => obj,
         };
         let crypto = KeystoreCrypto::from_json(crypto_dict_object)?;
         let path = json_dict
@@ -269,7 +272,8 @@ impl Keystore {
         Ok(())
     }
 
-    /// Retrieve the secret (BLS SK) from the self keystore by decrypting it with `password`
+    /// Retrieve the secret (BLS SK) from the self keystore by decrypting it
+    /// with `password`
     pub fn decrypt(&self, password: &str) -> Result<Vec<u8>, KeystoreError> {
         let salt = hex::decode(
             self.crypto

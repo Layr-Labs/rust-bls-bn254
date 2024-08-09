@@ -83,10 +83,9 @@ pub fn pbkdf2(
         )));
     }
 
-
-    // Verify the number of rounds of SHA256-PBKDF2. SHA512 not checked as use in BIP39
-    // does not require, and therefore doesn't use, safe parameters (c=2048).
-    // Ref: https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki#from-mnemonic-to-seed
+    // Verify the number of rounds of SHA256-PBKDF2. SHA512 not checked as use in
+    // BIP39 does not require, and therefore doesn't use, safe parameters
+    // (c=2048). Ref: https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki#from-mnemonic-to-seed
     if prf.contains("sha256") && c < 2_u32.pow(18) {
         return Err(KeystoreError::PBKDF2Error(
             "The PBKDF2 parameters chosen are not secure.".to_string(),

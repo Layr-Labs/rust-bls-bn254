@@ -3,11 +3,11 @@ use num_traits::{ToPrimitive, Zero};
 use pbkdf2::pbkdf2_hmac;
 use rand::Rng;
 use sha2::{Digest, Sha256, Sha512};
-use std::ops::Shl;
 use std::{
     collections::{HashMap, HashSet},
     fs::File,
     io::{self, BufRead, BufReader},
+    ops::Shl,
     path::Path,
 };
 use unicode_normalization::UnicodeNormalization;
@@ -27,8 +27,8 @@ impl Mnemonic {
         seed
     }
 
-    /// Given the language and path to the wordlist, return the list of BIP39 words.
-    /// Ref: https://github.com/bitcoin/bips/blob/master/bip-0039/bip-0039-wordlists.md
+    /// Given the language and path to the wordlist, return the list of BIP39
+    /// words. Ref: https://github.com/bitcoin/bips/blob/master/bip-0039/bip-0039-wordlists.md
     fn load_word_list(language: &str, words_path: &str) -> Vec<String> {
         let file_path = format!("{}/{}.txt", words_path, language);
         let file = File::open(file_path).expect("Unable to open word list file");
@@ -39,8 +39,8 @@ impl Mnemonic {
             .collect()
     }
 
-    /// Given the language and path to the wordlist, return the list of BIP39 words.
-    /// Ref: https://github.com/bitcoin/bips/blob/master/bip-0039/bip-0039-wordlists.md
+    /// Given the language and path to the wordlist, return the list of BIP39
+    /// words. Ref: https://github.com/bitcoin/bips/blob/master/bip-0039/bip-0039-wordlists.md
     pub fn get_word_list(language: &str, words_path: &str) -> io::Result<Vec<String>> {
         let path = Path::new(words_path).join(format!("{}.txt", language));
         let file = File::open(path)?;
@@ -61,7 +61,8 @@ impl Mnemonic {
         }
     }
 
-    /// Given a series of word strings, return the 4-letter version of each word (which is unique according to BIP39)
+    /// Given a series of word strings, return the 4-letter version of each word
+    /// (which is unique according to BIP39)
     fn abbreviate_words(words: &[String]) -> Vec<String> {
         words
             .iter()
@@ -70,7 +71,8 @@ impl Mnemonic {
     }
 
     /// Given a `mnemonic` determine what language[s] it is written in.
-    /// There are collisions between word-lists, so multiple candidate languages are returned.
+    /// There are collisions between word-lists, so multiple candidate languages
+    /// are returned.
     fn determine_mnemonic_language(
         mnemonic: &str,
         words_path: &str,
@@ -125,8 +127,8 @@ impl Mnemonic {
         }
     }
 
-    /// Return a mnemonic string in a given `language` based on `entropy` via the calculated checksum.
-    /// Ref: https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki#generating-the-mnemonic
+    /// Return a mnemonic string in a given `language` based on `entropy` via
+    /// the calculated checksum. Ref: https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki#generating-the-mnemonic
     pub fn get_mnemonic(
         language: &str,
         words_path: &str,
@@ -137,7 +139,7 @@ impl Mnemonic {
             None => {
                 let mut rng = rand::thread_rng();
                 (0..32).map(|_| rng.gen()).collect()
-            }
+            },
         };
 
         let entropy_length = entropy.len() * 8;
@@ -179,8 +181,8 @@ impl Mnemonic {
         checksum
     }
 
-    /// Given a mnemonic, a reconstructed the full version (incase the abbreviated words were used)
-    /// then verify it against its own checksum
+    /// Given a mnemonic, a reconstructed the full version (incase the
+    /// abbreviated words were used) then verify it against its own checksum
     pub fn reconstruct_mnemonic(mnemonic: &str, words_path: &str) -> Result<String, KeystoreError> {
         let languages = Self::determine_mnemonic_language(mnemonic, words_path)?;
         let mut reconstructed_mnemonic: Option<String> = None;

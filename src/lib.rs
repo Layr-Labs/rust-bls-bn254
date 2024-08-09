@@ -3,8 +3,10 @@
 extern crate alloc;
 
 use ark_bn254::{Bn254, Fq, Fr, G1Affine, G1Projective, G2Affine, G2Projective};
-use ark_ec::pairing::Pairing;
-use ark_ec::{pairing::PairingOutput, AffineRepr, CurveGroup};
+use ark_ec::{
+    pairing::{Pairing, PairingOutput},
+    AffineRepr, CurveGroup,
+};
 use ark_ff::{BigInteger256, Field, PrimeField, Zero};
 use ark_serialize::CanonicalSerialize;
 use ark_std::One;

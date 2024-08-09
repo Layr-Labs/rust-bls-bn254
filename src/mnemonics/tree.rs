@@ -1,4 +1,8 @@
-use crate::{consts::BN254_CURVE_ORDER, errors::KeystoreError, utils::{flip_bits_256, sha256}};
+use crate::{
+    consts::BN254_CURVE_ORDER,
+    errors::KeystoreError,
+    utils::{flip_bits_256, sha256},
+};
 use hkdf::Hkdf;
 use num_bigint::BigUint;
 use num_traits::Zero;
@@ -40,8 +44,8 @@ pub fn parent_sk_to_lamport_pk(parent_sk: &BigUint, index: u32) -> [u8; 32] {
     sha256(&concatenated_pks)
 }
 
-/// Hashes the IKM using HKDF and returns the answer as an int modulo r, the BLS field order.
-/// Ref: https://github.com/ethereum/EIPs/blob/master/EIPS/eip-2333.md#hkdf_mod_r
+/// Hashes the IKM using HKDF and returns the answer as an int modulo r, the BLS
+/// field order. Ref: https://github.com/ethereum/EIPs/blob/master/EIPS/eip-2333.md#hkdf_mod_r
 pub fn hkdf_mod_r(ikm: &[u8], key_info: &[u8]) -> Result<BigUint, KeystoreError> {
     let l = 48; // Length in bytes for 256-bit numbers
     let mut salt = b"BLS-SIG-KEYGEN-SALT-".to_vec();

@@ -109,7 +109,7 @@ impl Keystore {
     }
 
     /// save to self as a JSON keystore.
-    fn save(&self, file_path: &str) -> Result<(), KeystoreError> {
+    pub fn save(&self, file_path: &str) -> Result<(), KeystoreError> {
         let json_data = serde_json::to_string(self)?;
         let mut file = fs::File::create(file_path)?;
         file.write_all(json_data.as_bytes())?;

@@ -14,6 +14,8 @@ mod tests {
     use serde::{Deserialize, Deserializer, Serialize};
     use std::{fs, sync::Once};
 
+    #[allow(dead_code)]
+    #[allow(non_snake_case)]
     #[derive(Debug, Serialize, Deserialize)]
     struct KdfTest {
         seed: String,
@@ -29,6 +31,8 @@ mod tests {
         kdf_tests: Vec<KdfTest>,
     }
 
+    #[allow(dead_code)]
+    #[allow(non_snake_case)]
     #[derive(Debug, Deserialize)]
     struct TestVector {
         mnemonic: String,

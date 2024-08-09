@@ -6,6 +6,8 @@ mod tests {
     use serde::{Deserialize, Deserializer};
     use std::{collections::HashMap, fs, panic, sync::Once};
 
+    #[allow(dead_code)]
+    #[allow(non_snake_case)]
     #[derive(Debug, Deserialize)]
     struct TestVector {
         mnemonic: String,
@@ -22,6 +24,8 @@ mod tests {
         child_SK: BigUint,
     }
 
+    #[allow(dead_code)]
+    #[allow(non_snake_case)]
     #[derive(Debug, Deserialize, Clone)]
     struct TestVectorMnemonic {
         entropy: String,

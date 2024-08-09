@@ -69,6 +69,7 @@ impl Keystore {
             .and_then(|v| v.to_u32().ok_or("Cannot convert 'n' to u32".into()))
     }
 
+    #[allow(unused)]
     fn get_u64(param: Option<Value>) -> Result<u64, KeystoreError> {
         param
             .ok_or("Missing parameter".into())

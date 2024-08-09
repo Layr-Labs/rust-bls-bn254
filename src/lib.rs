@@ -1,6 +1,21 @@
+#![warn(unused_crate_dependencies)]
 #![cfg_attr(not(feature = "std"), no_std)]
-
 extern crate alloc;
+
+#[cfg(test)]
+use hex_literal as _;
+
+#[cfg(test)]
+use json as _;
+
+#[cfg(test)]
+use proptest as _;
+
+#[cfg(test)]
+use rand_core as _;
+
+#[cfg(test)]
+use assert_matches as _;
 
 use ark_bn254::{Bn254, Fq, Fr, G1Affine, G1Projective, G2Affine, G2Projective};
 use ark_ec::{

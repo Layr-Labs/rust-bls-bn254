@@ -37,6 +37,15 @@ pub mod keystores;
 pub mod mnemonics;
 pub mod utils;
 
+pub const CHINESE_SIMPLIFIED_WORD_LIST: &str = include_str!("word_lists/chinese_simplified.txt");
+pub const CHINESE_TRADITIONAL_WORD_LIST: &str = include_str!("word_lists/chinese_traditional.txt");
+pub const CZECH_WORD_LIST: &str = include_str!("word_lists/czech.txt");
+pub const ENGLISH_WORD_LIST: &str = include_str!("word_lists/english.txt");
+pub const ITALIAN_WORD_LIST: &str = include_str!("word_lists/italian.txt");
+pub const KOREAN_WORD_LIST: &str = include_str!("word_lists/korean.txt");
+pub const PORTUGUESE_WORD_LIST: &str = include_str!("word_lists/portuguese.txt");
+pub const SPANISH_WORD_LIST: &str = include_str!("word_lists/spanish.txt");
+
 fn pairing(u: G2Affine, v: G1Affine) -> PairingOutput<Bn254> {
     Bn254::pairing(v, u)
 }

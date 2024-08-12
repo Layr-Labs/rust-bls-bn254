@@ -39,12 +39,8 @@ impl Mnemonic {
             .collect()
     }
 
-    fn load_word_list_without_path(words_list: &str) -> Vec<String>{
-        words_list
-        .lines()
-        .map(|line| line.to_string())
-        .collect()
-
+    fn load_word_list_without_path(words_list: &str) -> Vec<String> {
+        words_list.lines().map(|line| line.to_string()).collect()
     }
 
     /// Given the language and path to the wordlist, return the list of BIP39
@@ -201,7 +197,6 @@ impl Mnemonic {
 
         Ok(mnemonic.join(" "))
     }
-
 
     fn uint11_array_to_uint(uint11_array: &[u16]) -> BigUint {
         let mut result = BigUint::zero();

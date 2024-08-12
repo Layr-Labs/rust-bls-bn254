@@ -1,7 +1,7 @@
 use crate::{
     consts::UNICODE_CONTROL_CHARS,
     errors::KeystoreError,
-    sk_to_pk,
+    sk_to_pk_g2,
     utils::{pbkdf2, scrypt_key},
 };
 use aes::{
@@ -267,7 +267,7 @@ impl Keystore {
 
         self.crypto.checksum.message = hex::encode(hasher.finalize());
 
-        self.pubkey = hex::encode(sk_to_pk(secret));
+        self.pubkey = hex::encode(sk_to_pk_g2(secret));
         self.path = path.to_string();
 
         Ok(())

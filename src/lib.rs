@@ -89,7 +89,7 @@ pub fn key_gen(ikm: &[u8], key_info: &[u8]) -> BigUint {
     sk
 }
 
-pub fn sk_to_pk(sk: &[u8]) -> Vec<u8> {
+pub fn sk_to_pk_g2(sk: &[u8]) -> Vec<u8> {
     let _sk = Fr::from_be_bytes_mod_order(sk);
     let mut compressed_bytes = Vec::new();
     let pk = G2Projective::from(G2Affine::generator()) * _sk;

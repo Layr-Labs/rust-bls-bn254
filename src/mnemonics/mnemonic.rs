@@ -39,6 +39,14 @@ impl Mnemonic {
             .collect()
     }
 
+    fn load_word_list_without_path(words_list: &str) -> Vec<String>{
+        words_list
+        .lines()
+        .map(|line| line.to_string())
+        .collect()
+
+    }
+
     /// Given the language and path to the wordlist, return the list of BIP39
     /// words. Ref: https://github.com/bitcoin/bips/blob/master/bip-0039/bip-0039-wordlists.md
     pub fn get_word_list(language: &str, words_path: &str) -> io::Result<Vec<String>> {
@@ -161,6 +169,39 @@ impl Mnemonic {
 
         Ok(mnemonic.join(" "))
     }
+
+    pub fn get_mnemonic_without_word_path(
+        words_list: &str,
+        entropy: Option<&[u8]>,
+    ) -> Result<String, KeystoreError> {
+        let entropy = match entropy {
+            Some(e) => e.to_vec(),
+            None => {
+                let mut rng = rand::thread_rng();
+                (0..32).map(|_| rng.gen()).collect()
+            },
+        };
+
+        let entropy_length = entropy.len() * 8;
+        let checksum_length = entropy_length / 32;
+        let checksum = Self::get_checksum(&entropy);
+        let mut entropy_bits = BigUint::from_bytes_be(&entropy) << checksum_length;
+        entropy_bits += BigUint::from(checksum);
+        let total_length = entropy_length + checksum_length;
+
+        let word_list = Self::load_word_list_without_path(words_list);
+        let mut mnemonic = Vec::new();
+
+        for i in (0..(total_length) / 11).rev() {
+            let index = (&entropy_bits >> (i * 11)) & BigUint::from(0x7FFu64);
+            let index_u32 = u32::from_str_radix(&index.to_str_radix(16), 16)
+                .map_err(|e| KeystoreError::MnemonicError(e.to_string()))?;
+            mnemonic.push(word_list[index_u32 as usize].as_str());
+        }
+
+        Ok(mnemonic.join(" "))
+    }
+
 
     fn uint11_array_to_uint(uint11_array: &[u16]) -> BigUint {
         let mut result = BigUint::zero();

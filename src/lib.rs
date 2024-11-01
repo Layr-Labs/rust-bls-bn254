@@ -22,6 +22,7 @@ use ark_ec::{
     pairing::{Pairing, PairingOutput},
     AffineRepr, CurveGroup,
 };
+use ark_ec::AdditiveGroup;
 use ark_ff::{BigInteger256, Field, PrimeField, Zero};
 use ark_serialize::CanonicalSerialize;
 use ark_std::One;

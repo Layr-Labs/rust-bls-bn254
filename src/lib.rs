@@ -218,6 +218,7 @@ pub fn aggregate_public_keys(public_keys: &[G2Affine]) -> Result<G2Affine, BLSEr
 #[cfg(test)]
 mod test {
     use super::*;
+use ark_ec::AdditiveGroup;
     use ark_bn254::G2Projective;
     use ark_ff::UniformRand;
     use ark_std::{ops::Mul, test_rng};

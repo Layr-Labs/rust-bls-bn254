@@ -14,7 +14,6 @@ impl Default for ScryptKeystore {
 }
 
 impl ScryptKeystore {
-    
     pub fn new() -> Self {
         let keystore = Keystore {
             crypto: KeystoreCrypto {

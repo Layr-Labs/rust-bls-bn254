@@ -28,7 +28,7 @@ pub fn flip_bits_256(input: &BigUint) -> BigUint {
 pub fn sha256(input: &[u8]) -> [u8; 32] {
     Sha256::digest(input)
         .try_into()
-        .expect("Hash should be 32 bytes") 
+        .expect("Hash should be 32 bytes")
 }
 
 /// Derives a key using the scrypt key derivation function.

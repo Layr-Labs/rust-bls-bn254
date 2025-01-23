@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod test {
-    use rust_bls_bn254::keystores::{
+    use bn254_bls_keystore::keystores::{
         base_keystore::Keystore, pbkdf2_keystore::Pbkdf2Keystore, scrypt_keystore::ScryptKeystore,
     };
     use serde_json::json;

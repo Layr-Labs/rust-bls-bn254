@@ -1,9 +1,7 @@
 #[cfg(test)]
 mod tests {
     use assert_matches::assert_matches;
-    use num_bigint::BigUint;
-    use num_traits::Zero;
-    use rust_bls_bn254::{
+    use bn254_bls_keystore::{
         key_gen,
         mnemonics::tree::{
             derive_child_sk, derive_master_sk, hkdf_mod_r, ikm_to_lamport_sk,
@@ -11,6 +9,8 @@ mod tests {
         },
         utils::flip_bits_256,
     };
+    use num_bigint::BigUint;
+    use num_traits::Zero;
     use serde::{Deserialize, Deserializer, Serialize};
     use std::{fs, sync::Once};
 

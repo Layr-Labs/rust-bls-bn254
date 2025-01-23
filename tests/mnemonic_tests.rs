@@ -1,8 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use ark_bn254::{Fq, G1Affine};
+    use bn254_bls_keystore::mnemonics::{path::mnemonic_and_path_to_key, Mnemonic};
     use num_bigint::BigUint;
-    use rust_bls_bn254::mnemonics::{path::mnemonic_and_path_to_key, Mnemonic};
     use serde::{Deserialize, Deserializer};
     use std::{collections::HashMap, fs, panic, sync::Once};
 

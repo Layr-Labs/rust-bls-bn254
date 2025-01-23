@@ -61,6 +61,7 @@ dependencies = [
  "num-bigint",
  "num-integer",
  "num-traits",
+ "rayon",
  "zeroize",
 ]
 
@@ -81,6 +82,7 @@ dependencies = [
  "num-bigint",
  "num-traits",
  "paste",
+ "rayon",
  "zeroize",
 ]
 
@@ -162,6 +164,7 @@ dependencies = [
  "arrayvec",
  "digest",
  "num-bigint",
+ "rayon",
 ]
 
 [[package]]
@@ -183,6 +186,7 @@ checksum = "246a225cc6131e9ee4f24619af0f19d67761fff15d7ccc22e42b80846e69449a"
 dependencies = [
  "num-traits",
  "rand",
+ "rayon",
 ]
 
 [[package]]
@@ -240,6 +244,37 @@ dependencies = [
 ]
 
 [[package]]
+name = "bn254-bls-keystore"
+version = "0.2.1"
+dependencies = [
+ "aes",
+ "ark-bn254",
+ "ark-ec",
+ "ark-ff",
+ "ark-serialize",
+ "ark-std",
+ "assert_matches",
+ "ctr",
+ "hex",
+ "hex-literal",
+ "hkdf",
+ "json",
+ "num-bigint",
+ "num-traits",
+ "pbkdf2",
+ "proptest",
+ "rand",
+ "rand_core",
+ "scrypt",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror",
+ "unicode-normalization",
+ "uuid",
+]
+
+[[package]]
 name = "byteorder"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -269,6 +304,31 @@ checksum = "53fe5e26ff1b7aef8bca9c6080520cfb8d9333c7568e1829cef191a9723e5504"
 dependencies = [
  "libc",
 ]
+
+[[package]]
+name = "crossbeam-deque"
+version = "0.8.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9dd111b7b7f7d55b72c0a6ae361660ee5853c9af73f70c3c2ef6858b950e2e51"
+dependencies = [
+ "crossbeam-epoch",
+ "crossbeam-utils",
+]
+
+[[package]]
+name = "crossbeam-epoch"
+version = "0.9.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5b82ac4a3c2ca9c3460964f020e1402edd5753411d7737aa39c3714ad1b5420e"
+dependencies = [
+ "crossbeam-utils",
+]
+
+[[package]]
+name = "crossbeam-utils"
+version = "0.8.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d0a5c400df2834b80a4c3327b3aad3a4c4cd4de0629063962b03235697506a28"
 
 [[package]]
 name = "crypto-common"
@@ -642,41 +702,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "rayon"
+version = "1.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b418a60154510ca1a002a752ca9714984e21e4241e804d32555251faf8b78ffa"
+dependencies = [
+ "either",
+ "rayon-core",
+]
+
+[[package]]
+name = "rayon-core"
+version = "1.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1465873a3dfdaa8ae7cb14b4383657caab0b3e8a0aa9ae8e04b044854c8dfce2"
+dependencies = [
+ "crossbeam-deque",
+ "crossbeam-utils",
+]
+
+[[package]]
 name = "regex-syntax"
 version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7a66a03ae7c801facd77a29370b4faec201768915ac14a721ba36f20bc9c209b"
-
-[[package]]
-name = "rust-bls-bn254"
-version = "0.2.1"
-dependencies = [
- "aes",
- "ark-bn254",
- "ark-ec",
- "ark-ff",
- "ark-serialize",
- "ark-std",
- "assert_matches",
- "ctr",
- "hex",
- "hex-literal",
- "hkdf",
- "json",
- "num-bigint",
- "num-traits",
- "pbkdf2",
- "proptest",
- "rand",
- "rand_core",
- "scrypt",
- "serde",
- "serde_json",
- "sha2",
- "thiserror",
- "unicode-normalization",
- "uuid",
-]
 
 [[package]]
 name = "rustix"

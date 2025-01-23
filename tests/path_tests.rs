@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use rust_bls_bn254::mnemonics::path::path_to_nodes;
+    use bn254_bls_keystore::mnemonics::path::path_to_nodes;
 
     #[test]
     fn test_path_to_nodes_valid() {

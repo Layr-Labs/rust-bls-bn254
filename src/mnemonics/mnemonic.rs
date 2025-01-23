@@ -68,10 +68,7 @@ impl Mnemonic {
     /// Given a series of word strings, return the 4-letter version of each word
     /// (which is unique according to BIP39)
     fn abbreviate_words(words: &[String]) -> Vec<String> {
-        words
-            .iter()
-            .map(Self::abbreviate_word)
-            .collect()
+        words.iter().map(Self::abbreviate_word).collect()
     }
 
     /// Given a `mnemonic` determine what language[s] it is written in.
@@ -113,7 +110,7 @@ impl Mnemonic {
 
         if found < mnemonic_list.len() {
             return Err(KeystoreError::MnemonicError(
-                "A Word was not found in any mnemonic word lists.".to_string()
+                "A Word was not found in any mnemonic word lists.".to_string(),
             ));
         }
 
@@ -292,9 +289,10 @@ impl Mnemonic {
         }
 
         reconstructed_mnemonic.ok_or_else(|| {
-            KeystoreError::ReconstructMnemonicError(
-                format!("Failed to reconstruct mnemonic. {}", mnemonic),
-            )
+            KeystoreError::ReconstructMnemonicError(format!(
+                "Failed to reconstruct mnemonic. {}",
+                mnemonic
+            ))
         })
     }
 

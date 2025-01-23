@@ -5,7 +5,7 @@ version = "0.2.1"
 edition = "2021"
 license = "MIT"
 readme = "README.md"
-rust-version = "1.79"
+rust-version = "1.81"
 keywords = ["cryptography", "BLS", "BN254", "ethereum", "signature"]
 categories = ["cryptography"]
 exclude = [
@@ -69,8 +69,17 @@ path = "tests/tree_tests.rs"
 name = "path"
 path = "tests/path_tests.rs"
 
-
-
-
 [workspace]
 members = ["."]
+
+[profile.test]
+opt-level = 3
+debug = true
+strip = "none"
+debug-assertions = false
+overflow-checks = false
+lto = false
+panic = 'unwind'
+incremental = false
+codegen-units = 16
+rpath = false

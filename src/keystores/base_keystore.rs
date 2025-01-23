@@ -36,7 +36,7 @@ pub struct KeystoreCrypto {
 impl KeystoreCrypto {
     fn from_json(json_dict: &Map<String, Value>) -> Result<Self, KeystoreError> {
         let kdf: KeystoreModule =
-            serde_json::from_value(json_dict["kdf"].clone()).map_err(|e| KeystoreError::from(e))?;
+            serde_json::from_value(json_dict["kdf"].clone()).map_err(KeystoreError::from)?;
         let checksum: KeystoreModule = serde_json::from_value(json_dict["checksum"].clone())?;
         let cipher: KeystoreModule = serde_json::from_value(json_dict["cipher"].clone())?;
         Ok(Self {
@@ -168,9 +168,9 @@ impl Keystore {
     }
 
     pub fn from_file(path: &str) -> Result<Self, KeystoreError> {
-        let file_content = fs::read_to_string(path).map_err(|e| KeystoreError::from(e))?;
+        let file_content = fs::read_to_string(path).map_err(KeystoreError::from)?;
         let json_dict: HashMap<String, serde_json::Value> = serde_json::from_str(&file_content)?;
-        Ok(Self::from_json(&json_dict)?)
+        Self::from_json(&json_dict)
     }
 
     /// Encode password as NFKD UTF-8 as per:

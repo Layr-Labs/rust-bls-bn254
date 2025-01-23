@@ -6,22 +6,49 @@ use sha2::{Digest, Sha256, Sha512};
 
 use crate::errors::KeystoreError;
 
+/// Performs a bitwise XOR operation with a 256-bit number to flip all bits.
+///
+/// # Arguments
+/// * `input` - The input number to flip
+///
+/// # Returns
+/// A new `BigUint` with all bits flipped relative to the input
 pub fn flip_bits_256(input: &BigUint) -> BigUint {
     let max_value = (BigUint::one() << 256) - BigUint::one();
     input ^ &max_value
 }
 
-/// The SHA256 helper function.
+/// Computes the SHA256 hash of the input bytes.
+///
+/// # Arguments
+/// * `input` - The bytes to hash
+///
+/// # Returns
+/// A 32-byte array containing the SHA256 hash
 pub fn sha256(input: &[u8]) -> [u8; 32] {
-    let mut hasher = Sha256::new();
-    hasher.update(input);
-    hasher
-        .finalize()
+    Sha256::digest(input)
         .try_into()
-        .expect("Hash should be 32 bytes")
+        .expect("Hash should be 32 bytes") 
 }
 
-/// The scrypt key derivation function.
+/// Derives a key using the scrypt key derivation function.
+///
+/// # Arguments
+/// * `password` - The password bytes
+/// * `salt` - The salt bytes
+/// * `n` - CPU/memory cost parameter
+/// * `r` - Block size parameter
+/// * `p` - Parallelization parameter
+/// * `dklen` - Length of the derived key
+///
+/// # Returns
+/// * `Ok(Vec<u8>)` - The derived key
+/// * `Err(KeystoreError)` - If the parameters are invalid or the derivation fails
+///
+/// # Security
+/// The function enforces minimum security parameters:
+/// - n * r * p must be at least 2^20
+/// - n must be less than 2^(128 * r / 8)
 pub fn scrypt_key(
     password: &[u8],
     salt: &[u8],
@@ -52,6 +79,15 @@ pub fn scrypt_key(
     Ok(output)
 }
 
+/// Validates the scrypt parameters n and r for security requirements.
+///
+/// # Arguments
+/// * `n` - CPU/memory cost parameter
+/// * `r` - Block size parameter
+///
+/// # Returns
+/// * `Ok(())` - If parameters are valid
+/// * `Err(KeystoreError)` - If parameters don't meet security requirements
 fn validate_scrypt_params(n: u32, r: u32) -> Result<(), KeystoreError> {
     let exponent = (128u32 * r) / 8u32;
     let max_n = BigUint::from(2u64).pow(exponent);
@@ -68,7 +104,22 @@ fn validate_scrypt_params(n: u32, r: u32) -> Result<(), KeystoreError> {
     Ok(())
 }
 
-/// A variant of the pbkdf2 function which uses HMAC for PRF.
+/// Derives a key using PBKDF2-HMAC with either SHA256 or SHA512.
+///
+/// # Arguments
+/// * `password` - The password bytes
+/// * `salt` - The salt bytes
+/// * `dklen` - Length of the derived key
+/// * `c` - Number of iterations
+/// * `prf` - Pseudo-random function to use ("sha256" or "sha512")
+///
+/// # Returns
+/// * `Ok(Vec<u8>)` - The derived key
+/// * `Err(KeystoreError)` - If the parameters are invalid or the derivation fails
+///
+/// # Security
+/// For SHA256, enforces a minimum of 2^18 iterations for security.
+/// SHA512 parameters are not checked as it's used for BIP39 seed generation.
 pub fn pbkdf2(
     password: &[u8],
     salt: &[u8],

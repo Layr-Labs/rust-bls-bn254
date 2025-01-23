@@ -70,7 +70,7 @@ impl Mnemonic {
     fn abbreviate_words(words: &[String]) -> Vec<String> {
         words
             .iter()
-            .map(|word| Self::abbreviate_word(word))
+            .map(Self::abbreviate_word)
             .collect()
     }
 
@@ -85,7 +85,7 @@ impl Mnemonic {
         let mut word_language_map: HashMap<String, String> = HashMap::new();
 
         for lang in languages {
-            let abbrev_word_list = Self::get_word_list(&lang, words_path)?;
+            let abbrev_word_list = Self::get_word_list(lang, words_path)?;
             for word in abbrev_word_list {
                 word_language_map.insert(word.clone(), lang.to_string());
             }
@@ -112,9 +112,9 @@ impl Mnemonic {
         }
 
         if found < mnemonic_list.len() {
-            return Err(KeystoreError::MnemonicError(format!(
-                "A Word was not found in any mnemonic word lists."
-            )));
+            return Err(KeystoreError::MnemonicError(
+                "A Word was not found in any mnemonic word lists.".to_string()
+            ));
         }
 
         Ok(word_languages.into_iter().collect())
@@ -150,7 +150,7 @@ impl Mnemonic {
         let checksum_length = entropy_length / 32;
         let checksum = Self::get_checksum(&entropy);
         let mut entropy_bits = BigUint::from_bytes_be(&entropy) << checksum_length;
-        entropy_bits += BigUint::from(checksum);
+        entropy_bits += checksum;
         let total_length = entropy_length + checksum_length;
 
         let word_list = Self::load_word_list(language, words_path);
@@ -182,7 +182,7 @@ impl Mnemonic {
         let checksum_length = entropy_length / 32;
         let checksum = Self::get_checksum(&entropy);
         let mut entropy_bits = BigUint::from_bytes_be(&entropy) << checksum_length;
-        entropy_bits += BigUint::from(checksum);
+        entropy_bits += checksum;
         let total_length = entropy_length + checksum_length;
 
         let word_list = Self::load_word_list_without_path(words_list);
@@ -213,8 +213,7 @@ impl Mnemonic {
         let checksum_length = entropy.len() / 4;
         let hash = Sha256::digest(entropy);
         let hash_biguint = BigUint::from_bytes_be(&hash);
-        let checksum = hash_biguint >> (256 - checksum_length);
-        checksum
+        hash_biguint >> (256 - checksum_length)
     }
 
     /// Given a mnemonic, a reconstructed the full version (incase the
@@ -277,7 +276,7 @@ impl Mnemonic {
             let full_word_list = Self::get_word_list(&language, words_path)?;
 
             if Self::get_checksum(&entropy_bytes) == checksum {
-                if let Some(_) = reconstructed_mnemonic {
+                if reconstructed_mnemonic.is_some() {
                     return Err(KeystoreError::ReconstructMnemonicError(
                         "Mnemonic is valid in multiple languages.".into(),
                     ));
@@ -294,7 +293,7 @@ impl Mnemonic {
 
         reconstructed_mnemonic.ok_or_else(|| {
             KeystoreError::ReconstructMnemonicError(
-                format!("Failed to reconstruct mnemonic. {}", mnemonic).into(),
+                format!("Failed to reconstruct mnemonic. {}", mnemonic),
             )
         })
     }

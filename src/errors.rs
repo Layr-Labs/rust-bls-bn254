@@ -1,87 +1,78 @@
-use std::{error::Error, fmt, io};
+use std::fmt;
 
 use hex::FromHexError;
 use serde_json::Error as SerdeError;
-use thiserror::Error as ErrorThis;
+use thiserror::Error;
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum BLSError {
+    #[error("Signature not in subgroup")]
     SignatureNotInSubgroup,
+    #[error("Signature array is empty")]
     SignatureListEmpty,
+    #[error("Public key not in subgroup")]
     PublicKeyNotInSubgroup,
+    #[error("The public key list is empty")]
     PublicKeyListEmpty,
 }
 
-impl Error for BLSError {}
-
-impl fmt::Display for BLSError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            BLSError::SignatureNotInSubgroup => write!(f, "Signature not in subgroup"),
-            BLSError::PublicKeyNotInSubgroup => write!(f, "Public key not in subgroup"),
-            BLSError::SignatureListEmpty => write!(f, "Signature array is empty"),
-            BLSError::PublicKeyListEmpty => write!(f, "The public key list is empty"),
-        }
-    }
-}
-
-#[derive(ErrorThis, Debug)]
+#[derive(Error, Debug)]
 pub enum KeystoreError {
-    #[error("Invalid KDF function provided.")]
+    #[error("Invalid KDF function provided")]
     WrongKdfFunction,
 
-    #[error("Serde serialization/deserialization error: {0}")]
-    SerdeError(#[from] SerdeError),
-
-    #[error("Hex decode error: {0}")]
-    FromHexError(#[from] FromHexError),
-
-    #[error("IO Error error: {0}")]
-    IOError(#[from] io::Error),
-
-    #[error("Invalid KDF parameters.")]
+    #[error("Invalid KDF parameters")]
     WrongKDFParameters,
 
-    #[error("Derive Child Sk Error error: {0}")]
+    #[error(transparent)]
+    SerdeError(#[from] SerdeError),
+
+    #[error(transparent)]
+    FromHexError(#[from] FromHexError),
+
+    #[error(transparent)]
+    IOError(#[from] std::io::Error),
+
+    #[error("Failed to derive child secret key: {0}")]
     DeriveChildSkError(String),
 
-    #[error("Derive Master Sk Error error: {0}")]
+    #[error("Failed to derive master secret key: {0}")]
     DeriveMasterSkError(String),
 
-    #[error("Generic error: {0}")]
+    #[error("{0}")]
     GenericError(String),
 
-    #[error("Scrypt Error: {0}")]
+    #[error("Scrypt error: {0}")]
     ScryptError(String),
 
-    #[error("PBKDF2 Error: {0}")]
+    #[error("PBKDF2 error: {0}")]
     PBKDF2Error(String),
 
-    #[error("Encryption Error: {0}")]
+    #[error("Encryption error: {0}")]
     EncryptionError(String),
 
-    #[error("Decryption Error: {0}")]
+    #[error("Decryption error: {0}")]
     DecryptionError(String),
 
-    #[error("Path to nodes Error: {0}")]
+    #[error("Invalid path to nodes: {0}")]
     PathToNodes(String),
 
-    #[error("Reconstruct mnemonic Error: {0}")]
+    #[error("Failed to reconstruct mnemonic: {0}")]
     ReconstructMnemonicError(String),
 
-    #[error("Mnemonic Error: {0}")]
+    #[error("Mnemonic error: {0}")]
     MnemonicError(String),
 }
 
 impl KeystoreError {
-    // Function to map other errors to GenericError
-    pub fn from<E: fmt::Display>(error: E) -> KeystoreError {
-        KeystoreError::GenericError(error.to_string())
+    /// Converts any error that implements Display into a KeystoreError::GenericError
+    pub fn from<E: fmt::Display>(error: E) -> Self {
+        Self::GenericError(error.to_string())
     }
 }
 
 impl From<&str> for KeystoreError {
-    fn from(err: &str) -> KeystoreError {
-        KeystoreError::GenericError(err.to_string())
+    fn from(err: &str) -> Self {
+        Self::GenericError(err.to_string())
     }
 }

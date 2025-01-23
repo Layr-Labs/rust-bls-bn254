@@ -7,7 +7,14 @@ use super::base_keystore::{Keystore, KeystoreCrypto, KeystoreModule};
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ScryptKeystore(Keystore);
 
+impl Default for ScryptKeystore {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ScryptKeystore {
+    
     pub fn new() -> Self {
         let keystore = Keystore {
             crypto: KeystoreCrypto {

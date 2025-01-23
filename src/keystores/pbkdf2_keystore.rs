@@ -6,6 +6,12 @@ use std::collections::HashMap;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Pbkdf2Keystore(pub(crate) Keystore);
 
+impl Default for Pbkdf2Keystore {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Pbkdf2Keystore {
     pub fn new() -> Self {
         let keystore = Keystore {

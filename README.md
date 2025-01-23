@@ -1,4 +1,8 @@
-# Rust BLS signatures using BN254 from arkworks 
+# EIP 2335 Compatible Keystore using BN254
+
+### Description
+This is a mechanism for storing private keys. It is a JSON file that encrypts a private key and is the standard for interchanging keys between devices as until a user provides their password, their key is safe.
+Refer EIP-2335 for more details.
 
 ## Warning & Disclaimer
 
